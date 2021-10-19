@@ -1,6 +1,12 @@
 
 # AruBGC36
 
+
+ | Number | Rider        | Time
+ | 1      | Bullet Bob   | 56:07
+ | 2      | Clumsy Colin | DNF 
+ | 3      | Swift Susan  | 55:13
+ 
 | EYE89947.1	| hypothetical protein EURHEDRAFT_553428 | 0.0 | Uncharacterized protein
 
 EYE89948.1	hypothetical protein EURHEDRAFT_382397 
