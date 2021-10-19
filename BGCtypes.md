@@ -1,6 +1,8 @@
 
-|AruBGC36|
-|EYE89947.1	|hypothetical protein EURHEDRAFT_553428|0.0|Uncharacterized protein|
+# AruBGC36
+
+| EYE89947.1	| hypothetical protein EURHEDRAFT_553428 | 0.0 | Uncharacterized protein
+
 EYE89948.1	hypothetical protein EURHEDRAFT_382397 
 Search		
 0.40	Transcription factor, fungi
