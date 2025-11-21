@@ -5,6 +5,9 @@
 # Biosynthetic Gene Cluster (BGC) Mining Pipeline  
 ### Marine-Derived Fungus *Aspergillus ruber*
 
+
+[![Bash](https://img.shields.io/badge/Environment-Bash-darkred?logo=bash)]()
+[![Python](https://img.shields.io/badge/Environment-Python-darkblue?logo=python)]()
 [![Snakemake](https://img.shields.io/badge/Workflow-Snakemake-5C4EE5?logo=snakemake)]()
 [![Nextflow](https://img.shields.io/badge/Workflow-Nextflow-3ac382?logo=nextflow)]()
 [![Conda](https://img.shields.io/badge/Environment-conda-44A833?logo=anaconda)]()
