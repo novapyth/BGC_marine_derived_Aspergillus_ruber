@@ -43,7 +43,7 @@ BGC-Pipeline/
 | **config.yaml** | Shared configuration file for both Snakemake and Nextflow (paths, parameters, resources). |
 | **Snakefile** | Snakemake workflow: download → BLAST → antiSMASH → HMMER → PANNZER2 → reannotation → alignment → phylogeny. |
 | **nextflow.config** | Nextflow configuration (profiles, resources, executors). |
-| **main.nf** | Nextflow pipeline implementing the full BGC mining workflow equivalent to the Snakemake version. |
+| **main.nf** | Nextflow pipeline implementing the full BGC mining workflow |
 
 ---
 📜 License
