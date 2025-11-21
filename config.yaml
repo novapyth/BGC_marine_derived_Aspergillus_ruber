@@ -1,0 +1,17 @@
+## File: `config.yaml`
+```yaml
+# Pipeline config
+assembly_accession: GCA_000600275.1
+workdir: A_ruber_pipeline
+genome_dir: {workdir}/genome
+proteins: {genome_dir}/A_ruber_proteins.faa
+genome_fasta: {genome_dir}/A_ruber_genome.fna
+gff: {genome_dir}/A_ruber.gff3
+query_proteins: queries/query.faa
+pks_nrps_queries: queries/pks_nrps_queries.faa
+core_proteins: core/core_proteins.faa
+threads: 8
+blast_evalue: 1e-10
+blast_qcov: 70
+blast_pid: 50
+antismash_output: {workdir}/antismash_run/antismash_output
