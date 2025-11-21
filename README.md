@@ -31,9 +31,11 @@ BGC-Pipeline/
     ├── main.nf                 # Nextflow pipeline
     └── nextflow.config         # Nextflow configuration
 
----
-## 📑 File Summary
 
+---
+
+## 📑 File Summary
+```text
 | File / Directory | Purpose |
 |------------------|---------|
 | **BGC_mining_pipeline.sh** | Main Bash script orchestrating all core BGC mining steps. |
