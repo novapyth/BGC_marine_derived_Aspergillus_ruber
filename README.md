@@ -31,7 +31,7 @@ BGC-Pipeline/
     ├── main.nf                 # Nextflow pipeline
     └── nextflow.config         # Nextflow configuration
 
-
+---
 ## File Summary
 
 | File / Directory | Purpose |
@@ -43,3 +43,9 @@ BGC-Pipeline/
 | **Snakefile** | Snakemake workflow: download → BLAST → antiSMASH → HMMER → PANNZER2 → reannotation → alignment → phylogenetic analysis. |
 | **nextflow.config** | Nextflow configuration file (profiles, resources, executors). |
 | **main.nf** | Nextflow pipeline implementing the full BGC mining workflow equivalent to the Snakemake version. |
+
+
+---
+📜 License
+
+MIT License
