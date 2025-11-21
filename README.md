@@ -35,7 +35,7 @@ BGC-Pipeline/
 ---
 
 ## 📑 File Summary
-```text
+```
 | File / Directory | Purpose |
 |------------------|---------|
 | **BGC_mining_pipeline.sh** | Main Bash script orchestrating all core BGC mining steps. |
