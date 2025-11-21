@@ -12,7 +12,7 @@
 
 This repository contains a fully reproducible pipeline for **Biosynthetic Gene Cluster (BGC) mining** in the marine-derived fungus **_Aspergillus ruber_**.  
 It supports **both Snakemake and Nextflow**, enabling flexible, scalable, and reproducible genomics analysis.
-
+```
 ---
 
 ## 📁 Repository Structure
@@ -31,12 +31,9 @@ BGC-Pipeline/
     ├── main.nf                 # Nextflow pipeline
     └── nextflow.config         # Nextflow configuration
 
-
-
-
----
+```
 ## 📑 File Summary
-
+```
 ```
 | File / Directory | Purpose |
 |------------------|---------|
