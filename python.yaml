@@ -1,0 +1,19 @@
+## File: `python.yaml`
+```yaml
+name: bgc-python
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - biopython
+  - pandas
+  - tqdm
+  - scikit-bio
+  - pip:
+      - pannzer2py  # wrapper for PANNZER2 if available; otherwise use PANNZER2 web API
+      - bayesalign
+
+# NOTE: If PANNZER2 is used via web API, you don't need an installed pannzer package; instead a small Python script
+# that POSTs to PANNZER2 service can be run. Replace the process in Snakemake/Nextflow accordingly.
