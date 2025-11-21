@@ -32,21 +32,14 @@ BGC-Pipeline/
     └── nextflow.config         # Nextflow configuration
 
 
-Summary of Files
+## File Summary
 
-File / Directory
-Description
-BGC_mining_pipeline.sh
-Core Bash script orchestrating key BGC mining steps.
-tools.yaml
-Conda environment (BLAST, HMMER, FastTree, COBALT, ncbi-datasets, antiSMASH, Snakemake/Nextflow support).
-python.yaml
-Environment for Python tools: PANNZER2, Biopython, utility scripts.
-config.yaml
-Pipeline configuration shared by Snakemake and Nextflow.
-Snakefile
-Full Snakemake workflow: download → BLAST → antiSMASH → HMMER → PANNZER2 → reannotation → alignment → tree.
-nextflow.config
-Nextflow pipeline configuration.
-main.nf
-Nextflow implementation of the BGC mining workflow.
+| File / Directory | Purpose |
+|------------------|---------|
+| **BGC_mining_pipeline.sh** | Main Bash script orchestrating all core BGC mining steps. |
+| **tools.yaml** | Conda environment for command-line tools (BLAST, HMMER, FastTree, COBALT, ncbi-datasets, Snakemake/Nextflow support). |
+| **python.yaml** | Conda environment for Python-based tools (PANNZER2, Biopython, annotation scripts). |
+| **config.yaml** | Shared configuration file for both Snakemake and Nextflow (paths, parameters, resources). |
+| **Snakefile** | Snakemake workflow: download → BLAST → antiSMASH → HMMER → PANNZER2 → reannotation → alignment → phylogenetic analysis. |
+| **nextflow.config** | Nextflow configuration file (profiles, resources, executors). |
+| **main.nf** | Nextflow pipeline implementing the full BGC mining workflow equivalent to the Snakemake version. |
