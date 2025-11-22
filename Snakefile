@@ -1,101 +1,297 @@
-# Snakemake pipeline for A_ruber BGC analysis
+##############################################
+# Aspergillus ruber BGC + Genome QC Pipeline
+# Snakemake DSL2 — Reproducible Bioinformatics
+##############################################
+
 import os
-from snakemake.utils import min_version
-min_version("6.0")
 
 configfile: "config.yaml"
 
-WORKDIR = config["workdir"].format(**config)
-GENOME_DIR = config["genome_dir"].format(**config)
-GENOME = config["genome_fasta"].format(**config)
-PROTEINS = config["proteins"].format(**config)
-GFF = config["gff"].format(**config)
-QUERY = config["query_proteins"].format(**config)
-PKS_QUERIES = config["pks_nrps_queries"].format(**config)
-CORE = config["core_proteins"].format(**config)
-THREADS = config.get("threads", 8)
+WORKDIR      = config["workdir"]
+ASSEMBLY     = WORKDIR + "/genome/A_ruber_genome.fna"
+PROTEINS     = WORKDIR + "/genome/A_ruber_proteins.faa"
+GFF          = WORKDIR + "/genome/A_ruber.gff3"
+BUSCO_OUT    = WORKDIR + "/qc/busco"
+BLOB_OUT     = WORKDIR + "/qc/blobtoolkit"
+BLASTDB      = WORKDIR + "/blastdb/A_ruber_db"
+BLAST_OUT    = WORKDIR + "/blast/results.tsv"
+ANTISMASH_OUT= WORKDIR + "/antismash"
+HMMER_OUT    = WORKDIR + "/hmmer/pfam_scan.tsv"
+PANNZER_OUT  = WORKDIR + "/pannzer"
+CLUST_CORE   = WORKDIR + "/core_proteins/core.faa"
+ALIGN_OUT    = WORKDIR + "/msa/core.aln.fasta"
+TREE_OUT     = WORKDIR + "/phylogeny/core.tree"
+
+##############################################
+# Rule: Final Output
+##############################################
 
 rule all:
     input:
-        expand(WORKDIR + "/blast/blast_results.tsv"),
-        expand(WORKDIR + "/antismash/antismash_output/index.html"),
-        expand(WORKDIR + "/hmmer/pfam.domtblout"),
-        expand(WORKDIR + "/pannzer/pannzer_output.tsv"),
-        expand(WORKDIR + "/core/core_proteins.tree")
+        ASSEMBLY,
+        PROTEINS,
+        BUSCO_OUT + "/short_summary.json",
+        BLOB_OUT + "/plots/blobplot.png",
+        BLAST_OUT,
+        ANTISMASH_OUT + "/index.html",
+        HMMER_OUT,
+        PANNZER_OUT + "/functional_annotations.tsv",
+        TREE_OUT
 
-#############################################
-# Step 1: Download with ncbi-datasets
-#############################################
+##############################################
+#Step 1: Genome Download
+##############################################
+
 rule download_genome:
     output:
-        genome_tar=WORKDIR + "/genome/ncbi_dataset.zip"
-    conda: "envs/tools.yaml"
+        WORKDIR + "/genome/ncbi_dataset.zip"
+    params:
+        accession=config["assembly_id"]
     shell:
         """
         mkdir -p {WORKDIR}/genome
-        cd {WORKDIR}/genome
-        datasets download genome accession {config[assembly_accession]} --include genome,protein,gff3,seq-report --filename ncbi_dataset.zip
+        datasets download genome accession {params.accession} \
+        --include genome,gff3,protein --filename {output}
         """
+
+##############################################
+#Step 2: Extract Genome & Proteins
+##############################################
 
 rule extract_genome:
     input:
         WORKDIR + "/genome/ncbi_dataset.zip"
     output:
-        GENOME, PROTEINS, GFF = WORKDIR + "/genome/A_ruber_genome.fna", WORKDIR + "/genome/A_ruber_proteins.faa", WORKDIR + "/genome/A_ruber.gff3"
+        ASSEMBLY,
+        PROTEINS,
+        GFF
     shell:
         """
-        unzip -o {input} -d {WORKDIR}/genome/dataset
-        cp {WORKDIR}/genome/dataset/ncbi_dataset/data/{config[assembly_accession]}/**/*.fna {output.GENOME} 2>/dev/null || true
-        cp {WORKDIR}/genome/dataset/ncbi_dataset/data/{config[assembly_accession]}/**/*.faa {output.PROTEINS} 2>/dev/null || true
-        cp {WORKDIR}/genome/dataset/ncbi_dataset/data/{config[assembly_accession]}/**/*.gff* {output.GFF} 2>/dev/null || true
+        mkdir -p {WORKDIR}/genome/extracted
+        unzip -o {input} -d {WORKDIR}/genome/extracted
+
+        find {WORKDIR}/genome/extracted -name "*.fna" | head -1 > tmp_fna
+        find {WORKDIR}/genome/extracted -name "*.faa" | head -1 > tmp_faa
+        find {WORKDIR}/genome/extracted -name "*.gff" | head -1 > tmp_gff
+
+        cp $(cat tmp_fna) {output[0]}
+        cp $(cat tmp_faa) {output[1]}
+        cp $(cat tmp_gff) {output[2]}
+
+        rm tmp_fna tmp_faa tmp_gff
         """
 
-#############################################
-# Step 2: Make BLAST DB and run BLASTP
-#############################################
+##############################################
+#Step 3: BUSCO — Genome Completeness
+##############################################
+
+rule busco:
+    input:
+        ASSEMBLY
+    output:
+        BUSCO_OUT + "/short_summary.json"
+    conda:
+        "envs/busco.yaml"
+    params:
+        lineage=config["busco_lineage"],
+        threads=config["threads"]
+    shell:
+        """
+        mkdir -p {BUSCO_OUT}
+        busco -i {input} \
+              -l {params.lineage} \
+              -m genome \
+              -c {params.threads} \
+              -o A_ruber_busco \
+              --out_path {BUSCO_OUT}
+        """
+
+##############################################
+#Step 4: BlobToolKit — Taxonomic Profiling
+##############################################
+
+rule blobtoolkit:
+    input:
+        ASSEMBLY
+    output:
+        BLOB_OUT + "/plots/blobplot.png"
+    conda:
+        "envs/blobtoolkit.yaml"
+    params:
+        threads=config["threads"],
+        nr_db=config["nr_db"],
+        nodes=config["tax_nodes"],
+        names=config["tax_names"]
+    shell:
+        """
+        mkdir -p {BLOB_OUT}
+
+        blobtools create --fasta {input} \
+                         --out {BLOB_OUT}/A_ruber_blobdb
+
+        diamond blastx -q {input} \
+                       -d {params.nr_db} \
+                       -o {BLOB_OUT}/hits.tsv \
+                       --threads {params.threads}
+
+        blobtools taxify --hits {BLOB_OUT}/hits.tsv \
+                         --nodes {params.nodes} \
+                         --names {params.names} \
+                         --out {BLOB_OUT}/taxified
+
+        blobtools plot --out {BLOB_OUT}/plots \
+                       {BLOB_OUT}/A_ruber_blobdb
+        """
+
+##############################################
+#Step 5: Make Local BLAST Database
+##############################################
+
 rule make_blast_db:
     input:
         PROTEINS
     output:
-        WORKDIR + "/blast/A_ruber_prot_db.pin"
-    conda: "envs/tools.yaml"
+        BLASTDB + ".pin"
+    params:
+        db=BLASTDB
     shell:
         """
-        mkdir -p {WORKDIR}/blast
-        makeblastdb -in {input} -dbtype prot -out {WORKDIR}/blast/A_ruber_prot_db
+        mkdir -p {WORKDIR}/blastdb
+        makeblastdb -in {input} -dbtype prot -out {params.db}
         """
+
+##############################################
+#Step 6: BLASTP — Identify Secondary Metabolite Proteins
+##############################################
 
 rule blastp:
     input:
-        query=QUERY,
-        db=WORKDIR + "/blast/A_ruber_prot_db"
+        query=config["sm_protein_queries"],
+        db=BLASTDB + ".pin"
     output:
-        WORKDIR + "/blast/blast_results.tsv"
+        BLAST_OUT
+    conda:
+        "envs/blast.yaml"
     params:
-        evalue=config.get("blast_evalue", "1e-10")
-    threads: THREADS
-    conda: "envs/tools.yaml"
+        db=BLASTDB,
+        threads=config["threads"]
     shell:
         """
         mkdir -p {WORKDIR}/blast
-        blastp -query {input.query} -db {input.db} -evalue {params.evalue} -out {output} -outfmt "6 qseqid sseqid pident length evalue bitscore qcovs" -num_threads {threads}
+        blastp -query {input.query} \
+               -db {params.db} \
+               -out {output} \
+               -evalue 1e-10 \
+               -num_threads {params.threads} \
+               -outfmt 6
         """
 
-#############################################
-# Step 3: antiSMASH
-#############################################
-rule run_antismash:
+##############################################
+#Step 7: antiSMASH — BGC Detection
+##############################################
+
+rule antismash:
     input:
-        genome=GENOME,
-        gff=GFF
+        ASSEMBLY,
+        PROTEINS,
+        GFF
     output:
-        WORKDIR + "/antismash/antismash_output/index.html"
-    conda: "envs/tools.yaml"
-    threads: THREADS
+        ANTISMASH_OUT + "/index.html"
+    conda:
+        "envs/antismash.yaml"
+    params:
+        threads=config["threads"]
     shell:
         """
-        mkdir -p {WORKDIR}/antismash
-        antismash --input-type nucl {input.genome} --gff3 {input.gff} --taxon fungi --strict --output-dir {WORKDIR}/antismash/antismash_output
+        mkdir -p {ANTISMASH_OUT}
+        antismash {input[0]} \
+            --genefinding-gff3 {input[2]} \
+            --cb-general --cb-knownclusters \
+            --cb-subclusters --pfam2go \
+            --asf --tta --taxon fungi \
+            --output-dir {ANTISMASH_OUT} \
+            --cpus {params.threads}
         """
 
-#########################################
+##############################################
+#Step 8: HMMER — Pfam Domain Search
+##############################################
+
+rule hmmer_scan:
+    input:
+        PROTEINS
+    output:
+        HMMER_OUT
+    conda:
+        "envs/hmmer.yaml"
+    params:
+        pfam=config["pfam_db"],
+        threads=config["threads"]
+    shell:
+        """
+        mkdir -p {WORKDIR}/hmmer
+        hmmscan --cpu {params.threads} \
+                --domtblout {output} \
+                {params.pfam} \
+                {input}
+        """
+
+##############################################
+#Step 9: PANNZER2 Functional Annotation
+##############################################
+
+rule pannzer:
+    input:
+        PROTEINS
+    output:
+        PANNZER_OUT + "/functional_annotations.tsv"
+    shell:
+        """
+        mkdir -p {PANNZER_OUT}
+        pannzer2.py -i {input} \
+                    -o {PANNZER_OUT}
+        """
+
+##############################################
+#Step 10: Extract Core Proteins for Phylogeny
+##############################################
+
+rule extract_core:
+    input:
+        ANTISMASH_OUT + "/index.html"
+    output:
+        CLUST_CORE
+    shell:
+        """
+        python scripts/extract_core_proteins.py \
+            --antismash {ANTISMASH_OUT} \
+            --out {output}
+        """
+
+##############################################
+#Step 11: COBALT Alignment
+##############################################
+
+rule cobalt_align:
+    input:
+        CLUST_CORE
+    output:
+        ALIGN_OUT
+    shell:
+        """
+        cobalt -i {input} -o {output}
+        """
+
+##############################################
+#Step 12: Phylogeny — Distance Tree
+##############################################
+
+rule build_tree:
+    input:
+        ALIGN_OUT
+    output:
+        TREE_OUT
+    shell:
+        """
+        fasttree -wag {input} > {output}
+        """
