@@ -1,5 +1,6 @@
 ## File: `python.yaml`
 ```yaml
+```yaml
 name: bgc-python
 channels:
   - conda-forge
