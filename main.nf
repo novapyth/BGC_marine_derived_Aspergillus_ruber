@@ -105,3 +105,35 @@ process run_blobtoolkit {
                    ${params.workdir}/qc/blobtoolkit/A_ruber_blobdb
     """
 }
+
+}
+```yaml
+name: bgc-tools
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - ncbi-datasets-cli=12.4.0
+  - ncbi-blast+
+  - hmmer
+  - fasttree
+  - prodigal
+  - emboss
+  - clustalo
+  - mafft
+  - biopython
+  - snakemake
+  - nextflow
+  - openjdk=11
+  - perl
+  - ruby
+  - pip
+  - pip:
+      - cobalt-cli # if available via pip; otherwise see notes
+
+# NOTE:
+# - antiSMASH sometimes requires additional system dependencies (Java, HMMER, GLIMMER, etc.).
+#   If antiSMASH is not available directly from conda on your platform, install antiSMASH
+#   from its official installer (https://antismash.secondarymetabolites.org) and update $PATH.
