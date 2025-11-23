@@ -106,7 +106,6 @@ process run_blobtoolkit {
     """
 }
 
-}
 ```yaml
 name: bgc-tools
 channels:
